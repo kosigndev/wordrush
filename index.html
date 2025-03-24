@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WordRush</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 5vh;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            font-size: 5vw;
+            color: #333;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            margin-bottom: 5px;
+        }
+        #instruction {
+            font-size: 3vw;
+            color: #555;
+            margin-bottom: 30px;
+        }
+        #timer {
+            font-size: 28px;
+            font-weight: bold;
+            color: #28a745;
+            margin-bottom: 30px;
+        }
+        .letter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+            gap: 2vw;
+            max-width: 90vw;
+            margin: 0 auto;
+        }
+        .letter-box {
+            flex: 1 1 calc(14% - 2vw); /* Ensures a responsive width */
+            height: auto;
+            font-size: 5vw;
+            text-align: center;
+            text-transform: uppercase;
+            border: 3px solid gray;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease-in-out;
+        }
+        .correct {
+            border-color: #28a745;
+            font-weight: bold;
+            background-color: #d4edda;
+        }
+        .wrong {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        .pop {
+            animation: pop 0.2s ease-in-out;
+        }
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        #message {
+            margin-top: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        #start, #restart {
+            margin-bottom: 30px;
+            margin-top: 20px;
+            padding: 2vh 5vw;
+            font-size: 3vw;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+        #start {
+            background: black;
+            color: white;
+        }
+        #restart {
+            display: none;
+            background: #ffc107;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <h1>WordRush</h1>
+    <p id="instruction">Try to guess the word as fast as you can! A letter will be revealed every 10 seconds.</p>
+    <button id="start">Start Game</button>
+    <div class="letter-grid">
+        <input type="text" class="letter-box" maxlength="1" disabled>
+        <input type="text" class="letter-box" maxlength="1" disabled>
+        <input type="text" class="letter-box" maxlength="1" disabled>
+        <input type="text" class="letter-box" maxlength="1" disabled>
+        <input type="text" class="letter-box" maxlength="1" disabled>
+        <input type="text" class="letter-box" maxlength="1" disabled>
+    </div>
+    <div id="timer">0.00s</div>
+    <div id="message"></div>
+    <button id="restart">Restart</button>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            const words = [
+                "BOTTLE", "PLANET", "CANDLE", "ROCKET", "GUITAR", "MARKET", "BREEZE", "WINDOW", "COUPLE", "TUNNEL",
+                "CHOICE", "SCHEME", "BANISH", "MIRROR", "FALCON", "CANYON", "BORDER", "BOTTLE", "VISION", "NATURE",
+                "WIZARD", "FATHER", "ANCHOR", "CIRCLE", "TACTIC", "SILVER", "GADGET", "PEPPER", "VOYAGE", "SECURE",
+                "MUSCLE", "MARBLE", "GARLIC", "INDOOR", "COSMIC", "MORALE", "CAMERA", "SURVEY", "JUNGLE", "PIGEON",
+                "NEBULA", "BASKET", "EXPECT", "SPIRIT", "SQUARE", "REVEAL", "CREATE", "MOBILE", "SAFETY", "ETHNIC",
+                "WANDER", "ZEPHYR", "GALAXY", "ESTATE", "MYSTIC", "GOLDEN", "DELETE", "SUMMER", "WINTER", "DANGER",
+                "SINGLE", "VORTEX", "SALMON", "ZODIAC", "RETIRE", "BLAZER", "SEASON", "DOUBLE", "ROTATE", "FROZEN",
+                "LOUNGE", "HUNTER", "ISLAND", "JUMPER", "KARATE", "LUSTER", "MONKEY", "NUGGET", "OUTFIT", "POCKET",
+                "QUIVER", "RANGER", "SPEARL", "TUNNEL", "URANUS", "VICTOR", "ANNUAL", "BUDGET", "YELLOW", "SPRING",
+                "AETHER", "SLEEVE", "CRADLE", "WINNER", "DRAGON", "LABOUR", "GRAVEL", "RETAIN", "RELIEF", "BARREL"
+            ];
+
+            function pickRandomWord() {
+                word = words[Math.floor(Math.random() * words.length)]; // Pick a random word
+                console.log("Selected word:", word); // Debugging: Log the chosen word in the console
+                }
+            let timeElapsed = 0;
+            let interval;
+            let nextReveal = 10;
+            let currentIndex = 1;
+            let running = false;
+
+            const timerDisplay = document.getElementById("timer");
+            const startButton = document.getElementById("start");
+            const restartButton = document.getElementById("restart");
+            const letterBoxes = document.querySelectorAll(".letter-box");
+            const message = document.getElementById("message");
+
+            function startGame() {
+                startButton.style.display = "none";
+
+                pickRandomWord();
+                resetLetterBoxes();
+
+                letterBoxes[currentIndex].disabled = false;
+                letterBoxes[currentIndex].focus();
+                startTime = performance.now();
+                running = true;
+                requestAnimationFrame(updateTimer);
+
+            }
+
+            function resetLetterBoxes() {
+                currentIndex = 1;
+                timeElapsed = 0;
+                nextReveal = 10;
+                letterBoxes.forEach((box, index) => {
+                    if (index === 0) {
+                        box.value = word[0]; // Keep the first letter revealed
+                    } else {
+                            box.value = "";
+                            box.disabled = true;
+                            box.classList.remove("correct", "wrong", "pop");
+                    }
+                    });
+                    timerDisplay.style.display = "block"; // Show timer again
+                    timerDisplay.textContent = "0.00s"; // Reset timer display
+                    message.textContent = ""; // Clear previous game message
+                    restartButton.style.display = "none"; // Hide restart button
+
+                    document.getElementById("instruction").style.display = "block";
+            }
+
+            function startTimer() {
+                interval = setInterval(() => {
+                    timeElapsed += 0.01;
+                    timerDisplay.textContent = timeElapsed.toFixed(2) + "s";
+                    
+                    if (Math.floor(timeElapsed) === nextReveal) {
+                        revealLetter();
+                        nextReveal += 10;
+                    }
+                }, 10);
+            }
+
+            function updateTimer() {
+                if (!running) return;
+                let now = performance.now();
+                timeElapsed = (now - startTime) / 1000;
+                timerDisplay.textContent = timeElapsed.toFixed(2) + "s";
+                
+                if (Math.floor(timeElapsed) >= nextReveal) {
+                    revealLetter();
+                    nextReveal += 10;
+                }
+                
+                requestAnimationFrame(updateTimer);
+
+            }
+
+            function revealLetter() {
+                if (currentIndex < word.length) {
+                    letterBoxes[currentIndex].value = word[currentIndex];
+                    letterBoxes[currentIndex].classList.add("pop");
+                    letterBoxes[currentIndex].disabled = true;
+                    currentIndex++;
+                    if (currentIndex < word.length) {
+                        letterBoxes[currentIndex].disabled = false;
+                        letterBoxes[currentIndex].focus();
+                    } else {
+                        endGame(false);
+                    }
+                }
+            }
+
+            letterBoxes.forEach((box, index) => {
+                if (index > 0) {
+                    box.addEventListener("input", function () {
+                        this.value = this.value.toUpperCase();
+                        if (this.value === word[index]) {
+                            this.classList.add("correct");
+                            this.disabled = true;
+                            currentIndex++;
+                            if (currentIndex < word.length) {
+                                letterBoxes[currentIndex].disabled = false;
+                                letterBoxes[currentIndex].focus();
+                            } else {
+                                endGame(true);
+                            }
+                        } else {
+                            this.classList.add("wrong");
+                            setTimeout(() => {
+                                this.value = "";
+                                this.classList.remove("wrong");
+                            }, 20);
+                        }
+                    });
+                }
+            });
+
+            function endGame(userWon) {
+                running = false;
+                document.getElementById('instruction').style.display = 'none';
+                document.getElementById('instruction').style.display = 'none';
+                document.getElementById("timer").style.display = "none"; // Hide the timer
+                message.textContent = userWon 
+                ? `Congratulations! You guessed the word in ${timeElapsed.toFixed(2)} seconds.` 
+                : "You didn't guess the word in time!";
+
+                restartButton.style.display = "block";
+            }
+
+            startButton.addEventListener("click", startGame);
+            restartButton.addEventListener("click", startGame);
+        });
+    </script>
+</body>
+</html>
