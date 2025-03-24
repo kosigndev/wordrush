@@ -4,21 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WordRush</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Lato', sans-serif;
             text-align: center;
             padding: 5vh;
             background-color: #f4f4f4;
         }
         h1 {
             font-size: 5vw;
-            color: #333;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+            color: #000000;
             margin-bottom: 5px;
         }
         #instruction {
-            font-size: 3vw;
+            font-size: 2vw;
             color: #555;
             margin-bottom: 30px;
         }
@@ -26,7 +27,8 @@
             font-size: 28px;
             font-weight: bold;
             color: #28a745;
-            margin-bottom: 30px;
+            position: relative;
+            top: 25px;
         }
         .letter-grid {
             display: grid;
@@ -41,10 +43,9 @@
             font-size: 5vw;
             text-align: center;
             text-transform: uppercase;
-            border: 3px solid gray;
+            border: 3px solid black;
             border-radius: 10px;
             background: white;
-            box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.1);
             transition: all 0.2s ease-in-out;
         }
         .correct {
@@ -80,11 +81,13 @@
             border-radius: 8px;
         }
         #start {
+            font-weight: bold;
             background: black;
             color: white;
         }
         #restart {
             display: none;
+            font-weight: bold;
             background: #ffc107;
             color: black;
         }
@@ -102,7 +105,7 @@
         <input type="text" class="letter-box" maxlength="1" disabled>
         <input type="text" class="letter-box" maxlength="1" disabled>
     </div>
-    <div id="timer">0.00s</div>
+    <div id="timer">Elapsed Time: 0.00s</div>
     <div id="message"></div>
     <button id="restart">Restart</button>
 
@@ -189,7 +192,7 @@
                 if (!running) return;
                 let now = performance.now();
                 timeElapsed = (now - startTime) / 1000;
-                timerDisplay.textContent = timeElapsed.toFixed(2) + "s";
+                timerDisplay.textContent = "Elapsed Time: " + timeElapsed.toFixed(2) + "s";
                 
                 if (Math.floor(timeElapsed) >= nextReveal) {
                     revealLetter();
